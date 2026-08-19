@@ -1,0 +1,54 @@
+name: Deploy auf moosburg.eu/data/historisch/
+
+# Läuft neben dem GitHub-Pages-Workflow in deploy.yml auf demselben Branch.
+# Die beiden stören sich nicht: Pages nutzt kein FTP.
+#
+# Unterschiedliche base-Pfade, deshalb ein eigener Build-Befehl: Pages liegt
+# unter /moosburghistorisch/ (Repo-Name), auf moosburg.eu hängen die Karten als
+# Unterpunkt am Data Hub, also unter /data/historisch/.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-data-historisch
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:hostinger
+
+      # public/.htaccess wandert mit und ist hier entscheidend: Die Kacheln
+      # werden per HTTP-Range gelesen. Würde Apache die .pmtiles-Datei
+      # komprimieren, verschöben sich die Byte-Offsets und die Karte bliebe
+      # leer — ohne Fehlermeldung.
+      - name: htaccess im Build prüfen
+        run: |
+          test -f dist/.htaccess || { echo "dist/.htaccess fehlt"; exit 1; }
+          ls -la dist dist/data
+
+      - name: Nach data/historisch/ spiegeln
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./dist/
+          server-dir: data/historisch/
+
+          # Alle Projekte teilen sich ein FTP-Konto, und die Repos können ihre
+          # Läufe nicht koordinieren (concurrency-Gruppen gelten je Repo).
+          # Läuft parallel ein datahub-Deploy, nimmt Hostinger die Verbindung
+          # erst nach Minuten an: Mit 120 s lief der Lauf in genau diesen
+          # Fall ("Timeout (control socket)"). Dazu rund 100 MB Kacheln.
+          timeout: 300000

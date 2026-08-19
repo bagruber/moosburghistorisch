@@ -1,0 +1,13 @@
+# PMTiles werden per HTTP-Range gelesen. Komprimiert Apache sie unterwegs,
+# verschieben sich die Byte-Offsets und die Karte bleibt leer -- ohne
+# Fehlermeldung. Auf GitHub Pages wirkungslos, auf moosburg.eu entscheidend.
+<IfModule mod_deflate.c>
+  SetEnvIfNoCase Request_URI \.pmtiles$ no-gzip dont-vary
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.pmtiles$">
+    Header set Accept-Ranges bytes
+    Header unset Content-Encoding
+  </FilesMatch>
+</IfModule>
+AddType application/octet-stream .pmtiles

@@ -1,0 +1,32 @@
+{
+  "name": "moosburghistorisch",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:hostinger": "tsc -b && vite build --base=/data/historisch/",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "data": "python etl/georef.py && python etl/kacheln.py"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource/playfair-display": "^5.2.8",
+    "maplibre-gl": "^5.0.0",
+    "pmtiles": "^4.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.0"
+  }
+}
