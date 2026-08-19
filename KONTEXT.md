@@ -242,7 +242,16 @@ Zwei Ziele aus einem Branch, wie bei der Baumkarte:
   (ohne Präfix), `timeout: 300000`
 
 `public/.htaccess` schaltet gzip für `.pmtiles` ab — sonst verschieben sich die
-Byte-Offsets der Range-Requests und die Karte bleibt kommentarlos leer.
+Byte-Offsets der Range-Requests und die Karte bleibt kommentarlos leer. Auf
+moosburg.eu geprüft: Range-Request auf `1960.pmtiles` liefert **206** mit
+korrektem `Content-Range` und ohne `Content-Encoding`.
+
+**Beide Ziele laufen** (19.08.2026), im Browser gegen die echten Adressen
+getestet, keine Konsolenfehler. Eine Warnung aus der Praxis: Der Push dieses
+Repos und der von `datahub` kurz danach haben sich am gemeinsamen FTP-Konto
+gestoßen — der Data-Hub-Lauf endete in `Timeout (control socket)`, obwohl
+sein Timeout bei 120 s liegt. Nach dem 93-MB-Upload braucht Hostinger länger.
+Ein erneuter Lauf genügte. Also: **nacheinander deployen, nicht parallel.**
 
 Die `exclude`-Liste des `moosburg-eu`-Workflows braucht **keinen** Eintrag:
 sie führt bereits `data/**`, und darunter liegt der neue Ordner. Die Card im
@@ -272,7 +281,9 @@ der Baumkarte); die beiden Karten teilen sich dort jetzt eine kleine
 
 ## Changelog
 
+- **19.08.2026 (2)** — Beide Deploys scharf geschaltet und an den echten
+  Adressen geprüft, Card im Data Hub live. Der Hostinger-Lauf von `datahub`
+  scheiterte beim ersten Versuch am gemeinsamen FTP-Konto (Abschnitt 6).
 - **19.08.2026** — Erste Fassung. Georeferenzierung über das Kilometergitter
   aufgebaut und an allen acht Blättern verifiziert (Klaffung ≤ 3 m rms),
-  Kachelpipeline nach PMTiles, App-Gerüst mit Zeitschiene, beide
-  Deploy-Workflows.
+  Kachelpipeline nach PMTiles, App mit Zeitschiene, beide Deploy-Workflows.
