@@ -3,3 +3,4 @@ dist
 *.tsbuildinfo
 # Rohscans aus den PDFs, jederzeit neu erzeugbar
 etl/scans/
+__pycache__/

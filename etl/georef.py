@@ -341,27 +341,39 @@ def mit_drehung(u, v, ziel, dreh, achse):
     return koeff, A @ lsg - ziel
 
 
-def rahmenkanten(ink, soll, tol=45):
+def rahmenkanten(ink, soll, streifen=9, tol=45):
     """Die beiden Rahmenlinien einer Achse, sofern eindeutig.
 
-    Der Rahmen ist der Blattschnitt selbst, also eine unabhaengige Aussage
-    ueber die Lage des Kartenfelds -- und damit die Probe auf das Gitter. Er
-    ist nur auf einem Teil der Blaetter kraeftig genug; wo er fehlt, bleibt
-    es beim Gitter allein.
+    Der Rahmen ist der Blattschnitt selbst, also eine vom Gitter unabhaengige
+    Aussage ueber die Lage des Kartenfelds -- und damit die Probe darauf.
+
+    Gesucht wird in schmalen Streifen und nicht in einem Zug ueber die halbe
+    Blattbreite: ein Blatt liegt bis zu drei Zehntelgrad schief auf dem
+    Scanner, und ueber 3000 px verwischt das eine Linie um mehr als zehn
+    Pixel, bis sie im Profil untergeht. Der Median ueber die Streifen liefert
+    die Lage in der Blattmitte.
     """
     W = ink.shape[1]
-    anteil = ink[:, int(W * 0.35):int(W * 0.65)].mean(axis=1)
-    gruppen = []
-    for i in np.nonzero(anteil > 0.85)[0]:
-        if gruppen and i - gruppen[-1][-1] <= 4:
-            gruppen[-1].append(i)
-        else:
-            gruppen.append([i])
-    linien = [float(np.mean(g)) for g in gruppen]
-    paare = [(a, b) for a in linien for b in linien if abs((b - a) - soll) < tol]
-    if not paare:
+    links, rechts = [], []
+    for s in range(streifen):
+        a = int(W * (0.1 + 0.8 * s / streifen))
+        b = int(W * (0.1 + 0.8 * (s + 1) / streifen))
+        anteil = ink[:, a:b].mean(axis=1)
+        gruppen = []
+        for i in np.nonzero(anteil > 0.9)[0]:
+            if gruppen and i - gruppen[-1][-1] <= 4:
+                gruppen[-1].append(i)
+            else:
+                gruppen.append([i])
+        linien = [float(np.mean(g)) for g in gruppen]
+        paare = [(x, y) for x in linien for y in linien if abs((y - x) - soll) < tol]
+        if paare:
+            beste = min(paare, key=lambda p: abs((p[1] - p[0]) - soll))
+            links.append(beste[0])
+            rechts.append(beste[1])
+    if len(links) < 3:
         return None
-    return min(paare, key=lambda p: abs((p[1] - p[0]) - soll)), W * 0.5
+    return (float(np.median(links)), float(np.median(rechts))), W * 0.5
 
 
 def loese(punkte, einzeln, dreh):
@@ -426,23 +438,35 @@ def blatt(pfad):
     # UTM-Linien im Kartenbild. Der Fit war in sich stimmig und lag trotzdem
     # 146 m daneben. Weicht das Modell vom Rahmen ab, gilt der Rahmen.
     px = feldecken(modell, ecken)
-    kanten = rahmenkanten(farbe, soll_h)
-    abweichung = None
-    if kanten:
-        (oben, unten), spalte = kanten
-        abweichung = round(max(abs((px["nw"][1] + px["no"][1]) / 2 - oben),
-                               abs((px["sw"][1] + px["so"][1]) / 2 - unten)), 1)
-        if abweichung > 15:
-            if not einzeln:
-                dreh = np.arctan2(modell["ostachse"][1], modell["ostachse"][0])
-            satz_nord = np.array(
-                [(spalte, oben, (ecken["nw"][1] + ecken["no"][1]) / 2),
-                 (spalte, unten, (ecken["sw"][1] + ecken["so"][1]) / 2)], float)
-            # Die Ostachse behaelt ihre Sonderbehandlung: haengt sie an einem
-            # einzigen Randband, waere ein freier Fit unterbestimmt.
-            modell = loese({"E": satz_ost, "N": satz_nord},
-                           sorted({*einzeln, "N"}), dreh)
-            px = feldecken(modell, ecken)
+    saetze_fest = {"E": satz_ost, "N": satz_nord}
+    abweichung = {}
+    for achse, ink, soll, kanten_ecken in (
+            ("N", farbe, soll_h, ("nw", "no", "sw", "so")),
+            ("E", farbe.T, soll_b, ("nw", "sw", "no", "so"))):
+        kanten = rahmenkanten(ink, soll)
+        if not kanten:
+            abweichung[achse] = None
+            continue
+        (erste, zweite), quer = kanten
+        i = 0 if achse == "E" else 1
+        a1, a2, b1, b2 = kanten_ecken
+        abweichung[achse] = round(max(
+            abs((px[a1][i] + px[a2][i]) / 2 - erste),
+            abs((px[b1][i] + px[b2][i]) / 2 - zweite)), 1)
+        if abweichung[achse] <= 15:
+            continue
+        if not einzeln:
+            dreh = np.arctan2(modell["ostachse"][1], modell["ostachse"][0])
+        werte = ((ecken[a1][i] + ecken[a2][i]) / 2, (ecken[b1][i] + ecken[b2][i]) / 2)
+        saetze_fest[achse] = np.array(
+            [(erste, quer, werte[0]), (zweite, quer, werte[1])] if achse == "E"
+            else [(quer, erste, werte[0]), (quer, zweite, werte[1])], float)
+        # Die andere Achse behaelt ihre Sonderbehandlung: haengt sie an einem
+        # einzigen Randband, waere ein freier Fit unterbestimmt.
+        einzeln = sorted({*einzeln, achse})
+        modell = loese(saetze_fest, einzeln, dreh)
+        px = feldecken(modell, ecken)
+    satz_ost, satz_nord = saetze_fest["E"], saetze_fest["N"]
 
     breite = (px["no"][0] - px["nw"][0] + px["so"][0] - px["sw"][0]) / 2
     hoehe = (px["sw"][1] - px["nw"][1] + px["so"][1] - px["no"][1]) / 2
@@ -469,12 +493,13 @@ def main():
         aus[pfad.name.split("_")[3][:4]] = m
         k, p = m["klaffung"], m["probe"]
         rand = m["rahmenabweichung"]
+        text = "/".join("-" if rand[a] is None else "%+.0f" % rand[a] for a in ("E", "N"))
         print("%-26s Striche %2d/%2d  Klaffung E %4.1f/%4.1f m  N %4.1f/%4.1f m"
-              "  Feld %.0fx%.0f px (soll %.0fx%.0f)  Rahmen %s%s"
+              "  Feld %.0fx%.0f px (soll %.0fx%.0f)  Rahmen E/N %s px%s"
               % (pfad.name, m["striche"]["ost"], m["striche"]["nord"],
                  k["ost_rms"], k["ost_max"], k["nord_rms"], k["nord_max"],
                  p["breite_px"], p["hoehe_px"], p["soll_breite"], p["soll_hoehe"],
-                 "nicht lesbar" if rand is None else "%+.0f px" % rand,
+                 text,
                  "" if m["drehung"] is None
                  else "  Drehung aus UTM-Netz %+.3f Grad" % m["drehung"]))
     (HIER / "passpunkte.json").write_text(

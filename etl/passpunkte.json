@@ -27,7 +27,10 @@
   },
   "drehung": null,
   "randprobe": 0.064,
-  "rahmenabweichung": 2.3,
+  "rahmenabweichung": {
+   "N": 2.0,
+   "E": 6.1
+  },
   "kartenfeld": {
    "nw": [
     520.5,
@@ -81,7 +84,10 @@
   },
   "drehung": null,
   "randprobe": 0.082,
-  "rahmenabweichung": null,
+  "rahmenabweichung": {
+   "N": 3.6,
+   "E": 10.7
+  },
   "kartenfeld": {
    "nw": [
     472.6,
@@ -135,7 +141,10 @@
   },
   "drehung": null,
   "randprobe": 0.067,
-  "rahmenabweichung": null,
+  "rahmenabweichung": {
+   "N": null,
+   "E": null
+  },
   "kartenfeld": {
    "nw": [
     464.5,
@@ -189,7 +198,10 @@
   },
   "drehung": null,
   "randprobe": 0.089,
-  "rahmenabweichung": 10.1,
+  "rahmenabweichung": {
+   "N": 9.6,
+   "E": 9.3
+  },
   "kartenfeld": {
    "nw": [
     332.2,
@@ -243,7 +255,10 @@
   },
   "drehung": null,
   "randprobe": 0.091,
-  "rahmenabweichung": 3.4,
+  "rahmenabweichung": {
+   "N": 8.4,
+   "E": 9.2
+  },
   "kartenfeld": {
    "nw": [
     361.5,
@@ -297,7 +312,10 @@
   },
   "drehung": null,
   "randprobe": 0.1,
-  "rahmenabweichung": null,
+  "rahmenabweichung": {
+   "N": 10.2,
+   "E": 8.4
+  },
   "kartenfeld": {
    "nw": [
     338.8,
@@ -351,7 +369,10 @@
   },
   "drehung": null,
   "randprobe": 0.078,
-  "rahmenabweichung": null,
+  "rahmenabweichung": {
+   "N": 2.4,
+   "E": null
+  },
   "kartenfeld": {
    "nw": [
     3125.9,
@@ -379,20 +400,20 @@
  },
  "2008": {
   "ostachse": [
-   2.1168692771384956,
-   -0.0017920777093334505,
-   4481052.163499148
+   2.11885595896739,
+   -0.0017937595742740723,
+   4481096.625497321
   ],
   "nordachse": [
-   -0.0017893193393723086,
-   -2.113610987280131,
-   5374000.046048681
+   -0.0017891492843120098,
+   -2.1134101118768522,
+   5373998.940229748
   ],
   "klaffung": {
-   "ost_rms": 1.5387175170355265,
-   "ost_max": 2.447386863641441,
-   "nord_rms": 1.3170890159654386e-09,
-   "nord_max": 1.862645149230957e-09
+   "ost_rms": 2.7939677238464355e-09,
+   "ost_max": 2.7939677238464355e-09,
+   "nord_rms": 2.08250058582033e-09,
+   "nord_max": 2.7939677238464355e-09
   },
   "datei": "02_7537_S_2008-000.jpg",
   "groesse": [
@@ -400,34 +421,37 @@
    5905
   ],
   "striche": {
-   "ost": 12,
+   "ost": 2,
    "nord": 2
   },
   "drehung": -0.04850486795947188,
   "randprobe": 0.047,
-  "rahmenabweichung": 69.7,
+  "rahmenabweichung": {
+   "N": 69.7,
+   "E": 29.3
+  },
   "kartenfeld": {
    "nw": [
-    3133.3,
-    238.7
+    3109.4,
+    238.2
    ],
    "no": [
-    8951.1,
-    240.1
+    8921.7,
+    239.6
    ],
    "sw": [
-    3126.4,
+    3102.4,
     5499.2
    ],
    "so": [
-    8955.5,
+    8926.2,
     5500.6
    ]
   },
   "probe": {
-   "breite_px": 5823.5,
+   "breite_px": 5818.0,
    "soll_breite": 5824.0,
-   "hoehe_px": 5260.5,
+   "hoehe_px": 5261.0,
    "soll_hoehe": 5252.9
   }
  }

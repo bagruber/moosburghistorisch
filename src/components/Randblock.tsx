@@ -86,16 +86,26 @@ export function Randblock({
 function Zeitschiene({ jahr, onJahr }: { jahr: number; onJahr: (j: number) => void }) {
   return (
     <div className="relative mt-2 pb-4">
-      {/* Marken der vorhandenen Ausgaben, auf echten Jahresabstaenden */}
-      <div className="pointer-events-none absolute inset-x-0 top-[7px] h-[10px]">
+      {/* Marken der vorhandenen Ausgaben, auf echten Jahresabstaenden. Sie
+          hängen über dem Lineal und stoßen an es an, statt es zu überlagern —
+          so kommen sie dem Schieber nicht in die Quere. */}
+      <div className="relative mb-px h-[11px]">
         {STUFEN.map((s) => (
-          <span
+          <button
             key={s}
-            className={`absolute top-0 w-px ${
-              s === jahr ? "h-[10px] bg-red-600" : "h-[5px] bg-ink-line"
-            }`}
+            type="button"
+            tabIndex={-1}
+            onClick={() => onJahr(s)}
+            aria-label={s === HEUTE ? "heute" : String(s)}
+            className="absolute bottom-0 top-0 -ml-[5px] w-[11px]"
             style={{ left: `${lage(s) * 100}%` }}
-          />
+          >
+            <span
+              className={`absolute bottom-0 left-1/2 -translate-x-1/2 ${
+                s === jahr ? "h-[11px] w-[2px] bg-red-600" : "h-[7px] w-px bg-gold-600"
+              }`}
+            />
+          </button>
         ))}
       </div>
       <input

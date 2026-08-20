@@ -142,22 +142,63 @@ versuchte Weg über die Rahmenlinie streute um 0,11° und war damit zu ungenau �
 bei 2008 liegen beide Bänder in derselben Blattecke, dort wirkt ein
 Drehungsfehler über die volle Blattdiagonale.
 
-**Ein stimmiger Fit kann trotzdem falsch liegen.** Auf dem Blatt 2008 stammte
-das einzige gefundene Nordband nicht vom Gauß-Krüger-Gitter, sondern von den
-**UTM-Linien im Kartenbild** — die queren dort das Blatt, während die
-GK-Nordwerte nur als kurze blaue Striche auf der äußeren Rahmenlinie
-angerissen sind, wo sie sich nicht freistellen lassen. Elf Striche, ein
-Kilometer Abstand, Restklaffung 1,2 m: von innen sah nichts falsch aus. Das
-Blatt lag **146 m zu weit südlich**, sichtbar erst, als am Südrand der
-Kachelausgabe die Randleiste mit den Gitterzahlen stehenblieb.
+**Ein stimmiger Fit kann trotzdem falsch liegen.** Auf dem Blatt 2008 stammten
+**beide** gefundenen Bänder nicht vom Gauß-Krüger-Gitter, sondern vom
+**UTM-Netz** — dessen Linien queren dort das Kartenbild, während die
+GK-Werte nur als kurze blaue Striche am Rand angerissen sind. Die blaue Marke
+liegt im unteren Randfeld 25 px links der schwarzen UTM-Linie; damit steht sie
+nicht mehr frei genug für das Sieb in `segmente`, fällt heraus, und die
+durchgezogene schwarze Linie bleibt übrig. Elf beziehungsweise zwölf Striche,
+ein Kilometer Abstand, Restklaffung 1,2 m: von innen sah nichts falsch aus.
+Das Blatt lag **146 m zu weit südlich und 49 m zu weit westlich**.
 
 Deshalb gibt es die **Rahmenprobe**: der gedruckte Blattrahmen ist der
-Blattschnitt selbst und damit eine vom Gitter unabhängige Aussage. Wo er
-kräftig genug ist, wird er gemessen und mit dem Modell verglichen; weicht das
-Modell um mehr als 15 px ab, gilt der Rahmen. Ergebnis über alle Blätter:
-1960 +2 px, 1984 +10 px, 1992 +3 px, 2008 +70 px (korrigiert), die übrigen
-vier Rahmen sind zu blass zum Messen. Die Nordachse von 2008 kommt seither
-aus den beiden Rahmenlinien, nicht aus dem Gitter.
+Blattschnitt selbst und damit eine vom Gitter unabhängige Aussage. Gesucht
+wird er in neun schmalen Streifen statt in einem Zug über die halbe
+Blattbreite — ein Blatt liegt bis zu drei Zehntelgrad schief auf dem Scanner,
+und über 3000 px verwischt das eine Linie, bis sie im Profil untergeht.
+Weicht das Modell um mehr als 15 px ab, gilt der Rahmen.
+
+Ergebnis über alle Blätter (Abweichung Ost/Nord in px): 1960 +6/+2,
+1963 +11/+4, 1984 +9/+10, 1992 +9/+8, 1995 +8/+10, 2001 —/+2,
+2008 +29/+70 → **beide Achsen von 2008 kommen aus dem Rahmen**. Der Rahmen von
+1969 ist zu blass zum Messen. Die durchgehenden +8 bis +11 px der guten
+Blätter sind die Messunsicherheit der Rahmensuche selbst (Doppellinien), nicht
+ein Fehler — deshalb liegt die Schwelle bei 15 px.
+
+### Gemessene Passgenauigkeit der Blätter untereinander
+
+Phasenkorrelation der fertigen Kacheln bei Zoom 16 (1 px = 1,58 m), Bezug
+1995, Median über bis zu 24 Felder:
+
+| Blatt | Versatz | Bemerkung |
+|---|---|---|
+| 1960 | nicht messbar | Kartenbild zu verschieden, siehe unten |
+| 1963 | nicht messbar | dito |
+| 1969 | 0,0 m | 14 Felder, alle auf 0–1 px |
+| 1984 | 1,1 m | 20 Felder, alle auf ≤1 px |
+| 1992 | 1,1 m | |
+| 1995 | — | Bezug |
+| 2001 | 3,5 m | |
+| 2008 | 6,5 m | vorher **49,5 m** |
+
+**Zu 1960 und 1963.** Beide sind mit ihrem eigenen Gitter sauber gefasst
+(2,1/1,2 m rms) und ihr Rahmen bestätigt das. Trotzdem sitzt 1960 gegen die
+späteren Ausgaben am Südrand deckungsgleich und driftet zum Nordrand hin um
+gut 10 m ab — im Blendbild sind Straße und Höhenlinie dort doppelt zu sehen.
+Automatisch **nicht korrigierbar**: von zwanzig Feldern liefern bei 1960 nur
+ein bis drei ein Ergebnis, dem zwei unabhängige Bezugsblätter gleichzeitig
+zustimmen; die Korrelation scheitert am Stilwechsel (Punktsignaturen,
+Schraffuren) und lässt sich auch durch größere Felder oder eine Beschränkung
+auf die schwarze Druckplatte nicht retten. Zum Vergleich: bei 1984 sind es
+20 von 20 Feldern.
+
+Was bleibt, wäre eine Handvoll **von Hand gesetzter Passpunkte** auf
+Merkmalen, die auf beiden Blättern eindeutig sind — Kirchtürme, Brücken,
+Straßenkreuzungen. Das ist der eine Fall, in dem sich eine Klick-Oberfläche
+wirklich lohnen würde. Bis dahin ist 1960 so referenziert, wie es gedruckt
+ist, und die Abweichung liegt zwischen Gitter und Kartenbild des Blattes
+selbst, nicht in der Pipeline.
 
 ### Probe
 
@@ -220,6 +261,13 @@ Mischbild**, weil zwei halbtransparente Karten übereinander unlesbar sind.
 Bewegt man ihn, blendet MapLibre über `raster-opacity-transition` in 450 ms
 über.
 
+Die Marken hängen **über** dem Lineal und stoßen an es an, statt es zu
+überlagern — so kommen sie dem Schieber nicht in die Quere und sind trotzdem
+anklickbar. Farbe Gold für die vorhandenen Ausgaben, Rot und doppelte Breite
+für die gewählte. Aus dem Tastaturpfad sind sie ausgenommen (`tabIndex={-1}`):
+der Regler selbst ist bereits bedienbar, neun zusätzliche Tab-Stationen wären
+nur im Weg.
+
 Nicht in der ersten Fassung: der Vorhang-Vergleich mit senkrechter Trennlinie.
 Er braucht eine zweite, synchronisierte Karteninstanz und lohnt erst, wenn die
 Zeitschiene im Gebrauch steht.
@@ -281,6 +329,10 @@ der Baumkarte); die beiden Karten teilen sich dort jetzt eine kleine
 
 ## Changelog
 
+- **20.08.2026** — Rahmenprobe auf beide Achsen ausgeweitet und in Streifen
+  gesucht. Damit 2008 von 49,5 m auf 6,5 m Versatz gebracht: dort hingen
+  *beide* Achsen am UTM-Netz. Passgenauigkeit aller Blätter untereinander
+  gemessen (Abschnitt 3). Marken der Zeitschiene sichtbar und anklickbar.
 - **19.08.2026 (2)** — Beide Deploys scharf geschaltet und an den echten
   Adressen geprüft, Card im Data Hub live. Der Hostinger-Lauf von `datahub`
   scheiterte beim ersten Versuch am gemeinsamen FTP-Konto (Abschnitt 6).
