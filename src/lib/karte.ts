@@ -8,6 +8,24 @@ export const BLATT: [number, number, number, number] = [
   11.8319, 48.39905, 11.99855, 48.49904,
 ];
 
+/** Anteil des Blattes, der im aeussersten Schwenk noch im Bild stehen soll. */
+const REST = 0.2;
+
+/** Wie weit die Karte ueber den Blattrand hinaus darf, haengt davon ab,
+ *  wieviel Karte ueberhaupt ins Fenster passt: das Fenster darf so weit
+ *  wandern, bis vom Blatt noch REST uebrig ist. Ein fester Ueberstand kann
+ *  das nicht leisten -- am Telefon ist das Sichtfeld schmaler als das Blatt,
+ *  am Schreibtisch anderthalbmal so breit. Gerechnet wird deshalb aus dem
+ *  eingepassten Blick, nicht aus der Blattgroesse. */
+export function schwenkgrenzen(karte: maplibregl.Map): maplibregl.LngLatBoundsLike {
+  const sicht = karte.getBounds();
+  const ueber = (weite: number, mass: number) =>
+    Math.max(weite - mass * REST, 0);
+  const x = ueber(sicht.getEast() - sicht.getWest(), BLATT[2] - BLATT[0]);
+  const y = ueber(sicht.getNorth() - sicht.getSouth(), BLATT[3] - BLATT[1]);
+  return [BLATT[0] - x, BLATT[1] - y, BLATT[2] + x, BLATT[3] + y];
+}
+
 /** Basiskarte der Gegenwart. Amtlich, ohne Schluessel, CORS offen -- und im
  *  Register einer topographischen Karte, also direkt mit den Blaettern
  *  vergleichbar. */

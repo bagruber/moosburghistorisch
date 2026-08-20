@@ -4,7 +4,7 @@ import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Randblock } from "@/components/Randblock";
 import { AUSGABEN } from "@/lib/jahre";
-import { BLATT, blaetterHinzu, grundstil, zeige } from "@/lib/karte";
+import { BLATT, blaetterHinzu, grundstil, schwenkgrenzen, zeige } from "@/lib/karte";
 
 /** Padding fuer fitBounds: mobil liegt der Randblock unten, ab sm links. */
 function randabstand() {
@@ -33,9 +33,6 @@ export default function App() {
       // Der Randblock sitzt mobil unten, am Desktop oben links -- das Blatt
       // bekommt deshalb asymmetrisch Luft, damit er keine Karte verdeckt.
       fitBoundsOptions: { padding: randabstand() },
-      // Das Blatt ist der ganze Gegenstand -- weiter hinaus gibt es nichts
-      // zu sehen, also endet die Karte auch dort.
-      maxBounds: [BLATT[0] - 0.05, BLATT[1] - 0.04, BLATT[2] + 0.05, BLATT[3] + 0.04],
       minZoom: 11,
       maxZoom: 18,
       attributionControl: false,
@@ -47,6 +44,9 @@ export default function App() {
     m.addControl(new maplibregl.ScaleControl({ maxWidth: 110, unit: "metric" }), "bottom-right");
 
     m.on("load", () => {
+      // Erst jetzt steht der eingepasste Blick fest, aus dem sich die
+      // Schwenkgrenzen ableiten.
+      m.setMaxBounds(schwenkgrenzen(m));
       blaetterHinzu(m, import.meta.env.BASE_URL);
       vorher.current = AUSGABEN[0].id;
       zeige(m, null, AUSGABEN[0].id, true);

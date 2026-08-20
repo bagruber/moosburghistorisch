@@ -1,7 +1,7 @@
 # Moosburg historisch — Projektkontext
 
 *Lebendes Arbeitsdokument. Vollständig lesen, bevor Code geschrieben wird.
-Änderungen mit Datum vermerken. Stand: 19.08.2026*
+Änderungen mit Datum vermerken. Stand: 20.08.2026*
 
 ---
 
@@ -166,46 +166,97 @@ Ergebnis über alle Blätter (Abweichung Ost/Nord in px): 1960 +6/+2,
 Blätter sind die Messunsicherheit der Rahmensuche selbst (Doppellinien), nicht
 ein Fehler — deshalb liegt die Schwelle bei 15 px.
 
+### Nachpassung (`etl/nachpassung.py`)
+
+Das Gitter ist die richtige Grundlage — aber auf den älteren Blättern stimmt
+das **Kartenbild nicht überall mit dem Gitter überein, das danebengedruckt
+wurde**. Papier zieht sich zwischen den Druckgängen der einzelnen Farbplatten,
+und Nachdrucke entstanden aus neu fotografierten Vorlagen. Wer Ausgaben
+übereinanderlegt, vergleicht das Kartenbild und nicht das Gitter, also muss
+das Kartenbild passen.
+
+Ein zweiter Durchgang misst deshalb auf den **fertigen Kacheln** bei Zoom 16
+(1 px = 1,58 m), was von der Deckung übrigbleibt, und legt je Blatt eine
+affine Korrektur als eigenen Block `nachpassung` in `passpunkte.json` ab —
+neben der Gitterlösung, nicht in sie hineingerechnet. `kacheln.py` verrechnet
+sie in `ruecktransform`: aus `P = A p + b` wird `P' = (I+C) A p + (I+C) b +
+c₀ − C P₀`, das bleibt affin, am übrigen Weg ändert sich nichts.
+
+Klaffung des Kartenbilds gegen das Mittel aus 1969/1984/1995, größter vom
+Modell irgendwo auf dem Blatt vorhergesagter Wert:
+
+| Blatt | vorher | nachher |
+|---|---|---|
+| 1960 | 15,2 m | **1,9 m** |
+| 1963 | 12,6 m | **1,9 m** |
+| 1969 | 1,5 m | Bezug |
+| 1984 | 1,3 m | Bezug |
+| 1992 | 6,6 m | unverändert gelassen |
+| 1995 | 1,1 m | Bezug |
+| 2001 | 7,6 m | unverändert gelassen |
+| 2008 | 9,7 m | **0,9 m** |
+
+Die drei Bezugsblätter kommen selbst auf 1,1–1,5 m heraus — das Verfahren
+erfindet also keine Verzerrung. Korrigiert wird ab 8 m; 1992 und 2001 bleiben
+darunter und werden nur vermerkt.
+
+**Was daran schwierig war.** Frühere Versuche mit Phasenkorrelation lieferten
+für 1960 und 1963 nur ein bis drei brauchbare von zwanzig Feldern, und ihre
+Schärfewerte waren bimodal: 1960/1963 gegeneinander 98,8, die Gruppe
+1969–1995 untereinander 67–92, **jede** Verbindung zwischen den beiden
+Gruppen aber 9. Zwei Inseln, die nur über Rauschen zusammenhängen — eine
+Netzausgleichung über alle Paare schob den Fehler entsprechend wahllos umher.
+
+Die Ursache war das Verfahren, nicht das Material. Die Weißung des Spektrums
+hebt gerade die feinen Signaturunterschiede hervor, an denen sich
+Nachkriegsstich und moderne Ausgabe unterscheiden. **Gewöhnliche
+Kreuzkorrelation auf leicht weichgezeichneter Tinte** fragt nach der Lage
+einer Straße statt nach der Strichführung des Stechers und trifft: 40 von 40
+Feldern, Rest 0,4 px bei der Kontrolle.
+
+Drei Punkte, an denen man sich hier verrechnet:
+
+- **Nur neutrales Schwarz** vergleichen. Braune Höhenlinien und blaue
+  Gewässer wurden zwischen den Ausgaben neu gezeichnet.
+- **Kein einzelnes Blatt als Bezug.** Das Mittel aus drei Ausgaben lässt nur
+  stehen, was über vier Jahrzehnte an derselben Stelle blieb.
+- **Die beiden Achsen tragen verschiedene Vorzeichen.** Die Korrelation
+  liefert Blattlage minus Bezugslage. Bei Ost heißt positiv „zu weit
+  östlich", die Korrektur zeigt nach Westen. Bei Nord heben sich zwei
+  Umkehrungen auf, weil die Kachelzeile nach Süden zählt und der Nordwert
+  nach Norden. Diesen Unterschied habe ich zunächst übersehen; die Folge war
+  eine Nordkorrektur, die saß, und eine Ostkorrektur, die den Fehler
+  verdoppelte.
+
+Und: gemessen wird auf Kacheln, in denen eine frühere Nachpassung schon
+steckt. Ein neuer Wert **addiert** sich deshalb zum alten, statt ihn zu
+ersetzen — sonst höbe der zweite Lauf den ersten auf. Blätter unter der
+Schwelle bleibt das Skript unangetastet: eine bestehende Korrektur wegzunehmen
+wäre ein Eingriff, kein Messergebnis.
+
 ### Gemessene Passgenauigkeit der Blätter untereinander
 
-Phasenkorrelation der fertigen Kacheln bei Zoom 16 (1 px = 1,58 m), Bezug
-1995, Median über bis zu 24 Felder:
+Phasenkorrelation der fertigen Kacheln bei Zoom 16, Bezug 1995, Median über
+bis zu 24 Felder — die ältere, gröbere Messung, hier als Verlaufsprotokoll:
 
-| Blatt | Versatz | Bemerkung |
-|---|---|---|
-| 1960 | nicht messbar | Kartenbild zu verschieden, siehe unten |
-| 1963 | nicht messbar | dito |
-| 1969 | 0,0 m | 14 Felder, alle auf 0–1 px |
-| 1984 | 1,1 m | 20 Felder, alle auf ≤1 px |
-| 1992 | 1,1 m | |
-| 1995 | — | Bezug |
-| 2001 | 3,5 m | |
-| 2008 | 6,5 m | vorher **49,5 m** |
+| Blatt | Versatz |
+|---|---|
+| 1969 | 0,0 m |
+| 1984 | 1,1 m |
+| 1992 | 1,1 m |
+| 2001 | 3,5 m |
+| 2008 | 6,5 m, vorher **49,5 m** |
 
-**Zu 1960 und 1963.** Beide sind mit ihrem eigenen Gitter sauber gefasst
-(2,1/1,2 m rms) und ihr Rahmen bestätigt das. Trotzdem sitzt 1960 gegen die
-späteren Ausgaben am Südrand deckungsgleich und driftet zum Nordrand hin um
-gut 10 m ab — im Blendbild sind Straße und Höhenlinie dort doppelt zu sehen.
-Automatisch **nicht korrigierbar**: von zwanzig Feldern liefern bei 1960 nur
-ein bis drei ein Ergebnis, dem zwei unabhängige Bezugsblätter gleichzeitig
-zustimmen; die Korrelation scheitert am Stilwechsel (Punktsignaturen,
-Schraffuren) und lässt sich auch durch größere Felder oder eine Beschränkung
-auf die schwarze Druckplatte nicht retten. Zum Vergleich: bei 1984 sind es
-20 von 20 Feldern.
-
-Was bleibt, wäre eine Handvoll **von Hand gesetzter Passpunkte** auf
-Merkmalen, die auf beiden Blättern eindeutig sind — Kirchtürme, Brücken,
-Straßenkreuzungen. Das ist der eine Fall, in dem sich eine Klick-Oberfläche
-wirklich lohnen würde. Bis dahin ist 1960 so referenziert, wie es gedruckt
-ist, und die Abweichung liegt zwischen Gitter und Kartenbild des Blattes
-selbst, nicht in der Pipeline.
+1960 und 1963 waren mit diesem Verfahren nicht messbar; dafür steht jetzt die
+Nachpassung oben.
 
 ### Probe
 
 `etl/passpunkte.json` hält je Blatt die beiden Achsfits, die Klaffungen, die
-Rahmenabweichung, das gerechnete Kartenfeld in Pixeln und den Sollvergleich.
-Wer eine Zuordnung von Hand korrigieren will, ändert dort die
-Achskoeffizienten — `etl/kacheln.py` liest ausschließlich diese Datei.
+Rahmenabweichung, das gerechnete Kartenfeld in Pixeln, den Sollvergleich und
+gegebenenfalls die Nachpassung. Wer eine Zuordnung von Hand korrigieren will,
+ändert dort die Achskoeffizienten — `etl/kacheln.py` liest ausschließlich
+diese Datei.
 
 Zwei weitere Proben, beide bestanden:
 
@@ -237,7 +288,13 @@ Projektionsrechnung ohne messbaren Fehler.
 - Randkacheln bekommen Alpha, volle Kacheln werden ohne Alphakanal
   geschrieben.
 
-Laufzeit rund 2,5 min je Blatt, das meiste davon WebP mit `method=6`.
+- Liegt für ein Blatt eine **Nachpassung** vor, rechnet `ruecktransform` sie
+  in die Affinabbildung ein (Abschnitt 3).
+
+Laufzeit rund 4 min je Blatt, das meiste davon WebP mit `method=6`. Ohne
+Argumente rechnet `kacheln.py` alle Jahrgänge, mit `python kacheln.py 1960
+2008` nur die genannten — jeder Neubau schreibt rund 12 MB dauerhaft in die
+Git-Historie, das lohnt sich zu vermeiden.
 
 ---
 
@@ -267,6 +324,23 @@ anklickbar. Farbe Gold für die vorhandenen Ausgaben, Rot und doppelte Breite
 für die gewählte. Aus dem Tastaturpfad sind sie ausgenommen (`tabIndex={-1}`):
 der Regler selbst ist bereits bedienbar, neun zusätzliche Tab-Stationen wären
 nur im Weg.
+
+**Die Schiene steht oben und bleibt stehen.** Im Randblock sitzt sie samt
+Jahreszahl in einem `sticky`-Block, der mit der Goldregel endet; alles
+Erklärende läuft darunter weg. Mobil lässt sich dieser untere Teil über den
+Griff wegklappen — der Randblock schrumpft von 368 auf 144 px und gibt der
+Karte gut ein Viertel des Bildschirms zurück, ohne dass das Instrument
+verschwindet.
+
+**Schwenkgrenzen aus dem Sichtfeld, nicht aus der Blattgröße.** Im äußersten
+Schwenk soll noch rund ein Fünftel des Blattes im Bild stehen. Wieviel
+Überstand das braucht, hängt davon ab, wieviel Karte ins Fenster passt: am
+Telefon ist das Sichtfeld bei Zoom 11 nur 0,134° breit und damit **schmaler
+als das Blatt**, am Schreibtisch mit 0,251° anderthalbmal so breit. Ein fest
+verdrahteter Überstand schiebt das Blatt deshalb auf der einen Größe komplett
+aus dem Bild, während er auf der anderen kaum wirkt — `schwenkgrenzen()`
+rechnet ihn aus dem eingepassten Blick, gesetzt wird er im `load`-Handler.
+Geprüft: 20 % in jede Richtung, auf 390×844 wie auf 1280×800.
 
 Nicht in der ersten Fassung: der Vorhang-Vergleich mit senkrechter Trennlinie.
 Er braucht eine zweite, synchronisierte Karteninstanz und lohnt erst, wenn die
@@ -329,6 +403,15 @@ der Baumkarte); die beiden Karten teilen sich dort jetzt eine kleine
 
 ## Changelog
 
+- **20.08.2026 (2)** — Zweiter Durchgang `etl/nachpassung.py`: die Klaffung
+  zwischen gedrucktem Kartenbild und gedrucktem Gitter gemessen und als
+  affine Korrektur abgelegt. 1960 von 15,2 auf 1,9 m, 1963 von 12,6 auf
+  1,9 m, 2008 von 9,7 auf 0,9 m. Damit ist auch die alte Feststellung
+  widerlegt, 1960 sei automatisch nicht zu korrigieren — es lag am
+  Korrelationsverfahren, nicht am Blatt. Randblock umgestellt: Zeitschiene
+  oben und `sticky`, Erklärendes darunter, mobil wegklappbar.
+  Schwenkgrenzen aus dem Sichtfeld statt aus der Blattgröße. Titel jetzt
+  „Historische Karten".
 - **20.08.2026** — Rahmenprobe auf beide Achsen ausgeweitet und in Streifen
   gesucht. Damit 2008 von 49,5 m auf 6,5 m Versatz gebracht: dort hingen
   *beide* Achsen am UTM-Netz. Passgenauigkeit aller Blätter untereinander
