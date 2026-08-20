@@ -15,6 +15,7 @@ Layouts der Faltkarten spielen keine Rolle mehr.
 import io
 import json
 import math
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -80,9 +81,22 @@ def stuetznetz(z, tx0, ty0, breite, hoehe, rueck):
 
 
 def ruecktransform(modell):
-    """GK -> Blattpixel, vektorisiert."""
+    """GK -> Blattpixel, vektorisiert.
+
+    Liegt fuer das Blatt eine Nachpassung vor, wird sie hier eingerechnet:
+    das Kartenbild soll um c(P) = c0 + C(P - P0) wandern, aus P = A p + b
+    wird damit P' = (I+C) A p + (I+C) b + c0 - C P0. Das bleibt affin, also
+    aendert sich am uebrigen Weg nichts.
+    """
     A = np.array([modell["ostachse"][:2], modell["nordachse"][:2]])
     b = np.array([modell["ostachse"][2], modell["nordachse"][2]])
+    nach = modell.get("nachpassung")
+    if nach:
+        C = np.array([nach["ost"][1:], nach["nord"][1:]])
+        c0 = np.array([nach["ost"][0], nach["nord"][0]])
+        P0 = np.array(nach["bezug"])
+        IC = np.eye(2) + C
+        A, b = IC @ A, IC @ b + c0 - C @ P0
     Ai = np.linalg.inv(A)
 
     def f(E, N):
@@ -207,8 +221,11 @@ def schreibe(jahr, kacheln, grenzen):
 
 def main():
     modelle = json.loads((HIER / "passpunkte.json").read_text(encoding="utf-8"))
+    nur = set(sys.argv[1:])          # ohne Angabe alle Jahrgaenge
     gesamt = 0
     for jahr, modell in sorted(modelle.items()):
+        if nur and jahr not in nur:
+            continue
         kacheln, grenzen = blatt_kacheln(jahr, modell)
         groesse = schreibe(jahr, kacheln, grenzen)
         gesamt += groesse
