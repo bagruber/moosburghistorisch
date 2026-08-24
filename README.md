@@ -62,10 +62,10 @@ npm run data       # Georeferenzierung und Kacheln neu erzeugen
 ```
 
 Die Pipeline erwartet die Scans in `etl/scans/`. Sie kommen verlustfrei aus
-den PDFs:
+den PDFs in `etl/pdf/`:
 
 ```bash
-for f in *.pdf; do pdfimages -j "$f" "etl/scans/${f%.pdf}"; done
+for f in etl/pdf/*.pdf; do b=$(basename "$f" .pdf); pdfimages -j "$f" "etl/scans/$b"; done
 ```
 
 `etl/georef.py` schreibt `etl/passpunkte.json` — je Blatt die beiden
