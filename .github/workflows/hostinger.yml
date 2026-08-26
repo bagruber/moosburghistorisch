@@ -20,12 +20,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build:hostinger
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build:hostinger
 
       # public/.htaccess wandert mit und ist hier entscheidend: Die Kacheln
       # werden per HTTP-Range gelesen. Würde Apache die .pmtiles-Datei
